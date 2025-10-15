@@ -1,0 +1,36 @@
+name: Auto Unzip Uploads
+
+on:
+  push:
+    paths:
+      - "*.zip"
+      - "**/*.zip"
+
+  workflow_dispatch:  # biar bisa dijalankan manual juga
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract ZIP files
+        run: |
+          mkdir -p extracted
+          for f in *.zip **/*.zip; do
+            [ -e "$f" ] || continue
+            unzip -o "$f" -d extracted
+          done
+
+      - name: Commit extracted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp -r extracted/* .
+          rm -rf extracted
+          rm -f *.zip **/*.zip
+          git add .
+          git diff --cached --quiet || git commit -m "✅ Auto extracted uploaded ZIP"
+          git push
