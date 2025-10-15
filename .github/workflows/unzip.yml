@@ -1,0 +1,29 @@
+name: Auto Unzip Uploads
+
+on:
+  push:
+    paths:
+      - "uploads/*.zip"
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract ZIP files
+        run: |
+          mkdir -p extracted
+          for f in uploads/*.zip; do
+            unzip -o "$f" -d extracted
+          done
+
+      - name: Commit extracted files
+        run: |
+          git config user.name "ZipBot"
+          git config user.email "zipbot@example.com"
+          cp -r extracted/* .
+          rm -rf uploads/*.zip
+          git add .
+          git commit -m "Auto-extracted ZIP files"
+          git push
